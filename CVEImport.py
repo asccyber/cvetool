@@ -60,7 +60,9 @@ conn.commit()
 cur.execute("DELETE FROM cve_list USING cve_list cv2 WHERE cve_list.cve_id \
  = cv2.cve_id AND cve_list.software_package = cv2.software_package AND \
  cve_list.pub_date = cv2.pub_date AND cve_list.mod_date = cv2.mod_date AND \
- cve_list.key_column > cv2.key_column;")
+ cve_list.key_column > cv2.key_column OR cve_list.cve_id = cv2.cve_id AND \
+ cve_list.software_package = cv2.software_package AND cve_list.pub_date = cv2.pub_date AND \
+ cve_list.mod_date < cv2.mod_date;")
 conn.commit()
 
 #Delete Reference Table
