@@ -66,9 +66,9 @@ for nodeEntry in xmldoc.getElementsByTagName("entry"):                          
         SQLstr = vulnsw[7:]  # Strips off prefix
         SQLinsert = "INSERT INTO cve_list (cve_id, software_package, pub_date, mod_date, score, access_vector, \
         access_complexity, authen, conf_impact, integ_impact, avail_impact, summary) VALUES \
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"  # Defines SQL insert function to be used
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"                                                               # Defines SQL insert function to be used
         cur.execute(SQLinsert, (entryid, SQLstr, pubvalue, modvalue, scorevalue, accvecval, acccompval, authreqval,
-                                confimpval, intimpval, availimpval, summaryval))  # Insert data  #Executes SQL statement in postgres
+                                confimpval, intimpval, availimpval, summaryval))                                        # Insert data  #Executes SQL statement in postgres
         conn.commit()
 
 #Create Reference Table
@@ -86,6 +86,32 @@ conn.commit()
 
 #Delete Reference Table
 cur.execute("DROP TABLE cv2;")
+conn.commit()
+
+#parse data
+xmldoc = minidom.parse("test.xml")
+mapping = {}                                                                                                            #Sets mapping variable for dictionary dataset
+for nodeEntry in xmldoc.getElementsByTagName("entry"):                                                                  #for loop to get entry ID and and vulnerable SW
+    entryid = nodeEntry.getAttribute("id")
+    software = nodeEntry.getElementsByTagName("vuln:product")
+    for nodeSoftware in software:                                                                                       #for loop to get vulnerable sw readable data
+        vulnsw = nodeSoftware.childNodes[0].data
+        SQLstr = vulnsw[7:]                                                                                             #Strips off prefix
+        SQLinsert = "INSERT INTO software_list (software_name) VALUES (%s)"                                             #Defines SQL insert function to be used
+        cur.execute(SQLinsert, (SQLstr,))                                                                               #Insert data  #Executes SQL statement in postgres
+        conn.commit()                                                                                                   #Saves change to database
+
+#Create Reference Table
+cur.execute("CREATE TABLE sl2 AS SELECT * FROM software_list;")
+conn.commit()
+
+#Delete Duplicates by checking package name and keeping first occurence of package
+cur.execute("DELETE FROM software_list USING software_list sl2 WHERE software_list.software_name \
+ = sl2.software_name AND software_list.key_column > sl2.key_column;")
+conn.commit()
+
+#Delete Reference Table
+cur.execute("DROP TABLE sl2;")
 conn.commit()
 
 #Close connection
