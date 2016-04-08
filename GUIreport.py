@@ -1,7 +1,5 @@
 import psycopg2 as dbapi2
-import urllib
-import gzip
-import os
+import csv
 import Tkinter as tk
 from Tkinter import *
 from xml.dom import minidom
@@ -93,12 +91,10 @@ loopval = len(app.ichose)
 
 #for i in range(loopval):
 #    sqlinsert = "INSERT INTO system_software (software_name, system_name) VALUES (%s, %s)"
-#    cur.execute(sqlinsert, (app.ichose[i], sys_name))
+#    cur.execute(sqlinsert, (app.ichose[i], sys_name) )
 #    conn.commit()
 
+#loop throught packages and print
 for i in range(loopval):
-    sqlpull = "SELECT * FROM cve_list WHERE software_package = (%s)"
+    sqlpull = "COPY (SELECT * FROM cve_list WHERE software_package = (%s)) TO '/home/user/Desktop/test/CVEResults/results.csv' with CSV;"
     cur.execute(sqlpull, (app.ichose[i],))
-    results = cur.fetchall()
-    for r in results:
-        print r
