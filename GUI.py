@@ -28,17 +28,17 @@ class App(tk.Frame):
 
         #creates scrollbar
         scrollB = Scrollbar(self, orient=HORIZONTAL, command=self.listB.yview)
-        scrollB.grid(column=0, row=0, sticky=(N,E))
+        scrollB.grid(column=0, row=0, sticky=(N, E))
         self.listB['yscrollcommand'] = scrollB.set
 
-        #creates submit button
-        submitB = Button(self, text='Submit', fg='red', command=self.quit)
-        submitB.grid(column=0, row=13)
-
         # creates system name entry field and label
-        eLabel= Label(master, text='System Name').grid(column=0, row=15)
-        userE = Entry(self, fg='black').grid(column=0, row=14)
+        eLabel = Label(self, text='System Name').grid(column=0, row=15)
+        self.userE = Entry(self)
+        self.userE.grid(column=0, row=14)
 
+        #creates submit button
+        submitB = Button(self, text='Submit', fg='red', command=self.on_button)
+        submitB.grid(column=0, row=13)
 
         #pulls software list from db to add to listbox
         cur.execute("SELECT software_name FROM software_list;")
@@ -53,6 +53,10 @@ class App(tk.Frame):
         # executes the poll() function to capture selected list items
         self.ichose = self.poll()
 
+    def on_button(self):
+        self.systemName = self.userE.get()
+        cveGui.destroy()
+
     def poll(self):
         items =[]
         self.ichose = []
@@ -61,7 +65,6 @@ class App(tk.Frame):
         # curselection retrieves the selected items as a tuple of strings
         # strings are the list indexes ('0' to whatever) of the items selected.
         self.selected_list.after(200, self.poll)
-
 
         # map applies the function specified in the 1st parameter to every item
         # from the 2nd parameter and returns a list of the results so "items"
@@ -89,9 +92,21 @@ cveGui.geometry('1280x800+200+200')
 app=App(cveGui)
 cveGui.mainloop()
 
-print app.ichose
+print app.systemName
 
-sqlinsert = "INSERT INTO system_software (software_name) VALUES (%s)"
-cur.execute(sqlinsert, [app.ichose])
-conn.commit()
+loopval = len(app.ichose)
 
+for i in range(loopval):
+    sqlinsert = "INSERT INTO system_software (software_name, system_name) VALUES (%s, %s)"
+    cur.execute(sqlinsert, (app.ichose[i], app.systemName))
+    conn.commit()
+
+#loop throught packages and print
+#for i in range(loopval):
+#  sqlpull = "COPY (SELECT * FROM cve_list WHERE software_package = (%s)) TO '/home/user/Desktop/test/CVEResults/results.csv' with CSV;"
+# cur.execute(sqlpull, (app.ichose[i],))
+
+# noinspection PyInterpreter
+#sqlinsert = "INSERT INTO system_software (software_name) VALUES (%s)"
+#cur.execute(sqlinsert, [app.ichose])
+#conn.commit()
