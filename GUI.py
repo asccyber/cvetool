@@ -92,21 +92,22 @@ cveGui.geometry('1280x800+200+200')
 app=App(cveGui)
 cveGui.mainloop()
 
-print app.systemName
-
+#Counts number of packages selected
 loopval = len(app.ichose)
 
+#Clear Table
+cur.execute("TRUNCATE system_software;")
+conn.commit()
+
+#Adds selected packages and system name into table
 for i in range(loopval):
     sqlinsert = "INSERT INTO system_software (software_name, system_name) VALUES (%s, %s)"
     cur.execute(sqlinsert, (app.ichose[i], app.systemName))
     conn.commit()
 
-#loop throught packages and print
-#for i in range(loopval):
-#  sqlpull = "COPY (SELECT * FROM cve_list WHERE software_package = (%s)) TO '/home/user/Desktop/test/CVEResults/results.csv' with CSV;"
-# cur.execute(sqlpull, (app.ichose[i],))
-
-# noinspection PyInterpreter
-#sqlinsert = "INSERT INTO system_software (software_name) VALUES (%s)"
-#cur.execute(sqlinsert, [app.ichose])
-#conn.commit()
+#Selects software packages based on inputs and creates csv with results
+sqlquery = "COPY (SELECT * FROM cve_list WHERE software_package IN (SELECT software_name FROM \
+system_software WHERE system_name = (%s))) \
+TO '/home/user/Desktop/test/CVEResults/results.csv' WITH CSV;"
+cur.execute(sqlquery, (app.systemName, ))
+conn.commit()
